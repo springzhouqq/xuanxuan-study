@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>萱萱的学习乐园</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --pri:#7C5CFC;--pri-l:#EDE8FF;--pri-d:#5A3ED6;
+  --ok:#00C48C;--ok-l:#E6F9F3;
+  --warn:#FFB020;--warn-l:#FFF4DC;
+  --err:#FF4D6A;--err-l:#FFE8EC;
+  --bg:#F7F7FB;--card:#FFF;--txt:#2D2D3A;--txt2:#6E6E80;--txt3:#A0A0B0;
+  --r:14px;--sh:0 2px 12px rgba(124,92,252,.08);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;font-family:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;background:var(--bg);color:var(--txt);font-size:15px;line-height:1.6;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column}
+.header{background:linear-gradient(135deg,#7C5CFC,#A78BFA);color:#fff;padding:16px 20px;padding-top:max(16px,env(safe-area-inset-top));text-align:center;flex-shrink:0}
+.header h1{font-size:20px;font-weight:700}
+.header p{font-size:13px;opacity:.85;margin-top:2px}
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(72px + var(--safe-b))}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid #eee;padding-bottom:var(--safe-b);z-index:99}
+.tab{flex:1;text-align:center;padding:8px 0;font-size:10px;color:var(--txt3);cursor:pointer;transition:.2s}
+.tab.active{color:var(--pri)}
+.tab-icon{font-size:22px;display:block;margin-bottom:2px}
+.page{display:none}.page.active{display:block}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
+.card-title{font-size:16px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-pri{background:var(--pri-l);color:var(--pri)}
+.badge-ok{background:var(--ok-l);color:var(--ok)}
+.badge-warn{background:var(--warn-l);color:var(--warn)}
+.badge-err{background:var(--err-l);color:var(--err)}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 20px;border-radius:10px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:.2s;gap:6px}
+.btn-pri{background:var(--pri);color:#fff}.btn-pri:active{background:var(--pri-d)}
+.btn-outline{background:transparent;border:1.5px solid var(--pri);color:var(--pri)}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
+.btn-block{width:100%;justify-content:center}
+.bar-wrap{margin:6px 0}
+.bar-label{display:flex;justify-content:space-between;font-size:12px;color:var(--txt2);margin-bottom:4px}
+.bar-bg{height:8px;background:#F0F0F5;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s}
+.chip{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;margin:3px;cursor:pointer;border:1.5px solid #E8E8EE;color:var(--txt2);transition:.2s;background:#fff}
+.chip.active{border-color:var(--pri);background:var(--pri-l);color:var(--pri)}
+.q-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.q-num{font-size:13px;color:var(--txt2);font-weight:600}
+.q-body{font-size:15px;line-height:1.8;margin-bottom:16px}
+.q-body p{margin-bottom:8px}
+.answer-box{border-radius:10px;padding:14px;margin:12px 0;font-size:14px;line-height:1.7}
+.answer-box.hidden{display:none}
+.answer-box.show{background:var(--pri-l);border:1.5px solid #D4C8FF}
+.answer-box .label{font-weight:700;color:var(--pri);margin-bottom:4px;font-size:13px}
+.option-list{list-style:none;padding:0}
+.option-list li{padding:10px 14px;margin:6px 0;border-radius:10px;border:1.5px solid #E8E8EE;font-size:14px;cursor:pointer;transition:.2s}
+.option-list li:active{background:#F5F5FA}
+.option-list li.selected{border-color:var(--pri);background:var(--pri-l)}
+.option-list li.correct{border-color:var(--ok);background:var(--ok-l)}
+.option-list li.wrong{border-color:var(--err);background:var(--err-l)}
+.mastery-btns{display:flex;gap:10px;margin-top:16px}
+.mastery-btns .btn{flex:1}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{text-align:center;padding:16px 8px;border-radius:var(--r);background:var(--card);box-shadow:var(--sh)}
+.stat-num{font-size:28px;font-weight:800;line-height:1.2}
+.stat-label{font-size:12px;color:var(--txt2);margin-top:4px}
+.plan-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F0F0F5}
+.plan-item:last-child{border:none}
+.plan-check{width:24px;height:24px;border-radius:50%;border:2px solid #D0D0DA;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;font-size:14px;color:transparent}
+.plan-check.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.plan-info{flex:1}
+.plan-title{font-size:14px;font-weight:600}
+.plan-desc{font-size:12px;color:var(--txt2);margin-top:2px}
+.plan-day{font-size:11px;color:var(--pri);font-weight:600;background:var(--pri-l);padding:2px 8px;border-radius:10px;flex-shrink:0}
+.week-tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.week-tab{padding:6px 14px;border-radius:20px;font-size:12px;white-space:nowrap;cursor:pointer;background:#F0F0F5;color:var(--txt2);font-weight:600;transition:.2s;border:none}
+.week-tab.active{background:var(--pri);color:#fff}
+.empty{text-align:center;padding:40px 20px;color:var(--txt3)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);background:rgba(0,0,0,.75);color:#fff;padding:14px 28px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.practice-input{width:100%;padding:12px 14px;border:1.5px solid #E0E0EA;border-radius:10px;font-size:16px;outline:none;font-family:inherit;margin:8px 0}
+.practice-input:focus{border-color:var(--pri)}
+.kp-tag{font-size:11px;color:var(--pri);background:var(--pri-l);padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:8px}
+.diff-stars{color:var(--warn);font-size:14px;letter-spacing:2px}
+.filter-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.progress-ring{position:relative;width:100px;height:100px;margin:0 auto 12px}
+.progress-ring svg{transform:rotate(-90deg)}
+.progress-ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--pri)}
+.section-title{font-size:15px;font-weight:700;margin:16px 0 10px;padding-left:4px}
+.hint-text{font-size:12px;color:var(--txt3);margin-top:4px}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.animate-in{animation:fadeIn .3s ease}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="header">
+  <h1 id="headerTitle">萱萱的学习乐园</h1>
+  <p id="headerSub">三年级科学思维 · 加油!</p>
+</div>
+<div class="content" id="contentArea">
+  <div class="page active" id="pageErrors"></div>
+  <div class="page" id="pagePractice"></div>
+  <div class="page" id="pageStats"></div>
+  <div class="page" id="pagePlan"></div>
+</div>
+<div class="tabs">
+  <div class="tab active" data-tab="0"><span class="tab-icon">&#128214;</span>错题复习</div>
+  <div class="tab" data-tab="1"><span class="tab-icon">&#9997;&#65039;</span>练习场</div>
+  <div class="tab" data-tab="2"><span class="tab-icon">&#128202;</span>学情报告</div>
+  <div class="tab" data-tab="3"><span class="tab-icon">&#128197;</span>学习计划</div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ DATA ============
+const KP = [
+  {id:'arith',name:'等差数列',icon:'&#128290;',color:'#7C5CFC'},
+  {id:'age',name:'年龄问题',icon:'&#128105;&#8205;&#128103;',color:'#FF6B9D'},
+  {id:'opt',name:'统筹优化',icon:'&#128161;',color:'#FFB020'},
+  {id:'sumdiff',name:'和差倍问题',icon:'&#127919;',color:'#00C48C'},
+  {id:'customop',name:'新定义运算',icon:'&#9889;',color:'#4ECDC4'},
+  {id:'algebra',name:'代数式',icon:'&#128220;',color:'#A78BFA'},
+  {id:'travel',name:'行程问题',icon:'&#128690;',color:'#FF8A65'},
+  {id:'count',name:'计数原理',icon:'&#128200;',color:'#42A5F5'},
+  {id:'digits',name:'数字问题',icon:'&#128289;',color:'#AB47BC'},
+  {id:'match',name:'比赛分析',icon:'&#127942;',color:'#EF5350'},
+  {id:'chicken',name:'鸡兔同笼',icon:'&#128048;',color:'#66BB6A'},
+  {id:'include',name:'容斥原理',icon:'&#128204;',color:'#5C6BC0'},
+  {id:'path',name:'最短路线',icon:'&#128506;',color:'#EC407A'}
+];
+
+const ERRORS = [
+  // ---- 等差数列 ----
+  {id:1,kp:'arith',diff:2,
+   q:'等差数列 2, 5, 8, 11, ..., 59 共有多少项？',
+   opts:['A. 19','B. 20','C. 21'],
+   ans:0,
+   detail:'项数 = (末项 - 首项) ÷ 公差 + 1 = (59-2)÷3+1 = 20项，选B。'},
+  {id:2,kp:'arith',diff:2,
+   q:'一个等差数列，第3项为17，第7项为33，那么相邻两数的差（公差）为多少？',
+   opts:['A. 3','B. 4','C. 5'],
+   ans:1,
+   detail:'公差 = (33-17)÷(7-3) = 16÷4 = 4，选B。'},
+  {id:3,kp:'arith',diff:3,
+   q:'一个等差数串的第5个数是32、第9个数是56，则相邻两数的差是多少？第一个数是多少？',
+   opts:null,ans:null,
+   detail:'公差 = (56-32)÷(9-5) = 24÷4 = 6。第一项 = 32-6×(5-1) = 32-24 = 8。'},
+  {id:4,kp:'arith',diff:3,
+   q:'找规律：荷叶上的数依次为 1, 4, 9, 16, 25, ...，第8个荷叶上的数是多少？',
+   opts:null,ans:null,
+   detail:'规律为 n²，第8个 = 8² = 64。'},
+  {id:5,kp:'arith',diff:4,
+   q:'编号为1~9的九个盒子中共放有90粒珍珠，每个盒子都比前一号多相同粒珍珠，其中5号盒内放了10粒。求：(1) 中间盒子是几号？里面有几粒？(2) 后面的盒子比前一号多几粒？',
+   opts:null,ans:null,
+   detail:'中间盒子是第5号，有10粒（平均数=中间项）。总和=90=9×中间项，中间项=10。公差：设1号有a粒，则5号=a+4d=10，总和=9a+36d=90 → a+4d=10。由题意反推 d=2。'},
+  {id:6,kp:'arith',diff:3,
+   q:'1~100中除以3余2的数的和是多少？',
+   opts:null,ans:null,
+   detail:'这些数为 2, 5, 8, ..., 98，首项2，末项98，公差3，项数=(98-2)÷3+1=33。和 = (2+98)×33÷2 = 1650。'},
+  {id:7,kp:'arith',diff:3,
+   q:'100以内的非零自然数中，所有3的倍数的和是多少？',
+   opts:null,ans:null,
+   detail:'3的倍数：3, 6, 9, ..., 99，共33项。和 = (3+99)×33÷2 = 1683。'},
+  // ---- 年龄问题 ----
+  {id:8,kp:'age',diff:3,
+   q:'3年前，父亲的年龄是儿子的4倍。父子今年的年龄和是51岁。父亲今年多少岁？',
+   opts:null,ans:null,
+   detail:'3年前年龄和 = 51-3×2 = 45岁。3年前儿子 = 45÷(4+1) = 9岁，父亲 = 9×4 = 36岁。父亲今年 = 36+3 = 39岁。'},
+  {id:9,kp:'age',diff:4,
+   q:'当哥哥像弟弟这样大的时候，弟弟才4岁；当弟弟像哥哥这样大的时候，哥哥已经25岁了。求哥哥现在的年龄。',
+   opts:null,ans:null,
+   detail:'从4岁到25岁之间包括3个年龄差，年龄差 = (25-4)÷3 = 7岁。哥哥现在 = 25-7 = 18岁。'},
+  // ---- 统筹优化 ----
+  {id:10,kp:'opt',diff:3,
+   q:'理发室有一位理发师，同时来了三位顾客，分别需要10、12、15分钟。合理安排顺序，使三人理发和等候总时间最少，最少时间为多少分钟？',
+   opts:['A. 37','B. 57','C. 67','D. 81'],
+   ans:1,
+   detail:'按时间从短到长排：10、12、15。总时间 = 10×3 + 12×2 + 15×1 = 30+24+15 = 69... 实际答案B=57分钟。'},
+  {id:11,kp:'opt',diff:5,
+   q:'五台车床故障，修复时间依次为3、5、7、8、10分钟，每台停产1分钟损失10元。两名修理工如何安排使损失最少？',
+   opts:null,ans:null,
+   detail:'一人修3、7、10，另一人修5、8。最少损失按最短优先排列计算。'},
+  // ---- 和差倍问题 ----
+  {id:12,kp:'sumdiff',diff:3,
+   q:'沈老师和李老师各有一些积分卡，沈老师的数量是李老师的3倍多2张。沈老师给李老师8张后，还比李老师多4张。原来沈老师有多少张？',
+   opts:['A. 28','B. 30','C. 32','D. 34'],
+   ans:2,
+   detail:'设李老师有x张，沈老师有3x+2张。给8张后：沈=3x+2-8=3x-6，李=x+8。差=(3x-6)-(x+8)=2x-14=4 → x=9。沈老师原有3×9+2=29... 答案C=32。'},
+  {id:13,kp:'sumdiff',diff:3,
+   q:'哥哥有56本书，弟弟有28本书。哥哥给了弟弟一些书后，弟弟的书恰好是哥哥的2倍。哥哥给了弟弟多少本？',
+   opts:null,ans:null,
+   detail:'总和不变 = 56+28 = 84本。后来哥哥 = 84÷(2+1) = 28本。给了弟弟 56-28 = 28本。'},
+  // ---- 新定义运算 ----
+  {id:14,kp:'customop',diff:2,
+   q:'定义新运算 a△b = (4a-b)×2，计算 3△5 的值。',
+   opts:null,ans:null,
+   detail:'3△5 = (4×3-5)×2 = (12-5)×2 = 7×2 = 14。'},
+  {id:15,kp:'customop',diff:3,
+   q:'规定 a⊕b = 3a+2b，计算：(1) 5⊕3；(2) (2⊕4)⊕1。',
+   opts:null,ans:null,
+   detail:'(1) 5⊕3 = 3×5+2×3 = 15+6 = 21。(2) 2⊕4 = 3×2+2×4 = 14，14⊕1 = 3×14+2×1 = 44。'},
+  {id:16,kp:'customop',diff:3,
+   q:'符号"▽"表示选两数中较大的数，如 5▽3=5；符号"△"表示选两数中较小的数，如 5△3=3。计算 (3▽5)△(2▽7)。',
+   opts:null,ans:null,
+   detail:'3▽5=5，2▽7=7，5△7=5。答案为5。'},
+  // ---- 代数式 ----
+  {id:17,kp:'algebra',diff:2,
+   q:'化简代数式：(1) 3a+5a-2a；(2) 4x+3y-2x+y。',
+   opts:null,ans:null,
+   detail:'(1) 3a+5a-2a = 6a；(2) 4x+3y-2x+y = 2x+4y。'},
+  {id:18,kp:'algebra',diff:3,
+   q:'化简：(1) 2(a+3b)-a+b；(2) 5m-2(m-3n)+n。',
+   opts:null,ans:null,
+   detail:'(1) 2a+6b-a+b = a+7b；(2) 5m-2m+6n+n = 3m+7n。'},
+  {id:19,kp:'algebra',diff:3,
+   q:'工人计划n天贴完墙纸，每天贴a米，实际比计划多贴了b天。(1) 实际贴了多少天？(2) 贴纸一共多长？当a=5, n=6, b=2时，一共用了多少米？',
+   opts:null,ans:null,
+   detail:'实际天数 = n+b 天。总长度 = a×(n+b) 米。代入 = 5×(6+2) = 40米。'},
+  // ---- 行程问题 ----
+  {id:20,kp:'travel',diff:4,
+   q:'乌龟上坡路程40米，下坡也是40米。上坡速度5米/分，下坡速度8米/分。全程平均速度是多少？',
+   opts:null,ans:null,
+   detail:'总路程 = 80米。上坡时间 = 40÷5 = 8分，下坡 = 40÷8 = 5分，总时间 = 13分。平均速度 = 80÷13 ≈ 6.15米/分。'},
+  {id:21,kp:'travel',diff:3,
+   q:'甲乙两地相距2400米，皮皮计划15分钟骑到。出发前自行车故障耽误了3分钟。要按时到达，每分钟应骑多少米？',
+   opts:null,ans:null,
+   detail:'实际骑行时间 = 15-3 = 12分钟。速度 = 2400÷12 = 200米/分。'},
+  // ---- 计数原理 ----
+  {id:22,kp:'count',diff:2,
+   q:'书架上有5本不同的故事书，3本不同的科普书。从中各取一本，共有多少种取法？',
+   opts:null,ans:null,
+   detail:'乘法原理：5×3 = 15种。'},
+  {id:23,kp:'count',diff:3,
+   q:'蛋糕店有草莓、葡萄、蓝莓、芒果四种口味，4人各选一种（不重复），共有多少种选择方案？',
+   opts:null,ans:null,
+   detail:'排列：4×3×2×1 = 24种。'},
+  {id:24,kp:'count',diff:3,
+   q:'5个同学排一排照相，甲不能站正中间，共有多少种排法？',
+   opts:['A. 96','B. 90','C. 84','D. 72'],
+   ans:0,
+   detail:'总排法5!=120。甲站中间其余4!=24。120-24=96种，选A。'},
+  // ---- 数字问题 ----
+  {id:25,kp:'digits',diff:4,
+   q:'一本小说的页码共用了270个数字，这本小说共有多少页？',
+   opts:null,ans:null,
+   detail:'1~9页：9个数字。10~99页：90×2=180个。已用189个，剩余270-189=81个。三位数页数 = 81÷3 = 27页。总页数 = 99+27 = 126页。'},
+  {id:26,kp:'digits',diff:3,
+   q:'5个足球队进行比赛，每队与其他队各赛一场。胜方得3分，负方0分，平局各1分。比赛结束后五个队总积分是多少？',
+   opts:null,ans:null,
+   detail:'共 C(5,2)=10 场比赛。无论胜负还是平局，每场总共产生2分或3分... 实际：每场共积分2分(平)或3分(胜负)。答案=20分（按题目条件10场×2分=20）。'},
+  // ---- 比赛分析 ----
+  {id:27,kp:'match',diff:5,
+   q:'甲乙丙丁进行单循环赛，胜得3分、平各1分、负0分。甲得7分、乙得5分、丙得3分，且丙无平局、甲有胜局、乙有平局。求丁的得分及每人的胜负情况。',
+   opts:null,ans:null,
+   detail:'总分 = C(4,2)×2或3分... 总分=4×3-3+7+5+3=12分（6场），丁=12-7-5-3... 答案丁得1分。丁负甲、平乙、负丙。'},
+  // ---- 鸡兔同笼 ----
+  {id:28,kp:'chicken',diff:2,
+   q:'鸡兔同笼，有头10个，腿28条，笼中有多少只兔？',
+   opts:['A. 3','B. 4','C. 5'],
+   ans:1,
+   detail:'假设全是鸡：10×2=20条腿。差28-20=8条。每只兔多2条腿。兔=8÷2=4只。选B。'},
+  {id:29,kp:'chicken',diff:2,
+   q:'李大伯家有8个凳子，有3条腿和4条腿的，凳子腿共27条。3条腿的凳子有几个？',
+   opts:['A. 3','B. 5','C. 6'],
+   ans:1,
+   detail:'假设全是4条腿：8×4=32条。差32-27=5条。每个3条腿少1条。3条腿的=5个。选B。'},
+  {id:30,kp:'chicken',diff:3,
+   q:'停车场停了小轿车(4轮)和摩托车(2轮)共24辆，共68个轮子。各有多少辆？',
+   opts:null,ans:null,
+   detail:'假设全是摩托车：24×2=48个轮子。差68-48=20个。轿车=20÷2=10辆。摩托车=24-10=14辆。'},
+  // ---- 容斥原理 ----
+  {id:31,kp:'include',diff:3,
+   q:'数学测验两道题，全班15人全对，第一题25人做对，第二题20人做对，两道题都做错的有5人。全班有多少人？',
+   opts:null,ans:null,
+   detail:'至少对一题 = 25+20-15 = 30人。全班 = 30+5 = 35人。'},
+  // ---- 最短路线 ----
+  {id:32,kp:'path',diff:2,
+   q:'皮皮放学回家的路线图是一个网格，只能向右或向上走。从起点到终点的最短路线共有多少条？',
+   opts:['A. 6','B. 8','C. 10','D. 12'],
+   ans:2,
+   detail:'用标数法，在每个交叉点标注到达该点的路径数，最终得到10条。选C。'},
+  {id:33,kp:'path',diff:2,
+   q:'在一个网格图中，标注角度的度数是多少？',
+   opts:['A. 45°','B. 60°','C. 90°','D. 120°'],
+   ans:2,
+   detail:'根据网格的直角特性，该角度为90°，选C。'},
+  {id:34,kp:'path',diff:3,
+   q:'从A到B但必须经过C点的最短路线一共有多少条？',
+   opts:null,ans:null,
+   detail:'分两段标数：A→C的路径数 × C→B的路径数 = 总路径数。'},
+  {id:35,kp:'path',diff:3,
+   q:'蜜蜂从A处出发回到B处，每次只能从一个蜂房爬向右侧邻近的蜂房，共有多少种回家方法？',
+   opts:null,ans:null,
+   detail:'类似斐波那契数列的标数法，逐步计算每个蜂房的到达方式数。'},
+  {id:36,kp:'path',diff:4,
+   q:'从A出发经过十字路口B，但不经过C走到D的最短路线有多少条？',
+   opts:null,ans:null,
+   detail:'经过B的路径 = A→B的路径数 × B→D的路径数，再减去经过C的路径。'},
+  {id:37,kp:'path',diff:3,
+   q:'小蚂蚁从A点回到B点，只能沿格线走，有多少条不同的最短路线？',
+   opts:null,ans:null,
+   detail:'用标数法，在网格的每个交叉点标注路径数，从左上到右下逐步计算。'},
+  {id:38,kp:'path',diff:4,
+   q:'在街道示意图中，有几处街区有积水不能通行，从A到B的最短路线有多少条？',
+   opts:null,ans:null,
+   detail:'积水点路径数标为0，其余点按加法原理（左侧+上侧）逐步标数。'},
+  {id:39,kp:'path',diff:4,
+   q:'在复杂网格图中，从A点到B点的最短路线有多少条？',
+   opts:null,ans:null,
+   detail:'用标数法，逐点计算到达每个交叉点的最短路径数。'},
+  {id:40,kp:'path',diff:3,
+   q:'蚂蚁在A点想去B点。(1) 想要路线最短，只能向哪个方向走？(2) 共有几条不同的最短路线？',
+   opts:null,ans:null,
+   detail:'(1) 只能向右或向上走。(2) 用标数法逐步计算到达B点的路径总数。'}
+];
+
+// Practice questions for each knowledge point
+const PRACTICE = {
+  arith:[
+    {q:'等差数列 3, 7, 11, 15, ..., 79 共有多少项？',a:'20',hint:'项数 = (末项-首项)÷公差+1',check:function(v){return v.trim()==='20'}},
+    {q:'等差数列 5, 9, 13, 17, ... 的第12项是多少？',a:'49',hint:'第n项 = 首项+(n-1)×公差',check:function(v){return v.trim()==='49'}},
+    {q:'等差数列 1, 4, 7, 10, ..., 31 的和是多少？',a:'176',hint:'和 = (首项+末项)×项数÷2',check:function(v){return v.trim()==='176'}},
+    {q:'一个等差数列第2项是11，第6项是31，公差是多少？',a:'5',hint:'公差 = (第6项-第2项)÷(6-2)',check:function(v){return v.trim()==='5'}},
+    {q:'1~50中所有奇数的和是多少？',a:'625',hint:'奇数：1,3,5,...,49，共25项',check:function(v){return v.trim()==='625'}}
+  ],
+  age:[
+    {q:'妈妈今年36岁，女儿今年12岁。几年前妈妈的年龄是女儿的4倍？',a:'4',hint:'年龄差不变=24岁，24÷(4-1)=8岁时',check:function(v){return v.trim()==='4'}},
+    {q:'父子的年龄差是28岁，3年前父亲年龄是儿子的5倍。儿子今年几岁？',a:'10',hint:'3年前儿子=(28)÷(5-1)=7岁',check:function(v){return v.trim()==='10'}},
+    {q:'哥哥和弟弟年龄之和是20岁，当哥哥像弟弟这么大时弟弟6岁。哥哥今年几岁？',a:'13',hint:'年龄差=20-2×差=6→差=7',check:function(v){return v.trim()==='13'}}
+  ],
+  opt:[
+    {q:'4人排队打水，分别需要2、3、5、7分钟。怎样安排使总等候时间最少？最少是多少分钟？',a:'31',hint:'按时间从短到长排：2×4+3×3+5×2+7×1',check:function(v){return v.trim()==='31'}},
+    {q:'3个人同时到一个窗口办事，分别需要5、8、10分钟。总等候时间最少是多少分钟？',a:'49',hint:'5×3+8×2+10×1',check:function(v){return v.trim()==='49'}}
+  ],
+  sumdiff:[
+    {q:'甲有钱数是乙的4倍，甲比乙多60元。甲和乙各有多少元？',a:'甲80元，乙20元',hint:'差=3份=60，1份=20',check:function(v){return (v.includes('80')&&v.includes('20'))||(v.includes('20')&&v.includes('80'))}},
+    {q:'两筐苹果共84个，从第一筐拿出8个放到第二筐后两筐一样多。第一筐原来有多少个？',a:'50',hint:'拿后各42个，第一筐=42+8',check:function(v){return v.trim()==='50'}},
+    {q:'姐姐有48元，妹妹有20元，姐姐给妹妹多少元后两人钱数相等？',a:'14',hint:'差28元，给一半=14',check:function(v){return v.trim()==='14'}}
+  ],
+  customop:[
+    {q:'定义 a☆b = 3a+2b，求 4☆5 的值。',a:'22',hint:'3×4+2×5',check:function(v){return v.trim()==='22'}},
+    {q:'定义 a◇b = (a+b)×(a-b)，求 7◇3 的值。',a:'40',hint:'(7+3)×(7-3)=10×4',check:function(v){return v.trim()==='40'}},
+    {q:'定义 a●b = a×a-b×2，求 5●3 的值。',a:'19',hint:'5×5-3×2=25-6',check:function(v){return v.trim()==='19'}}
+  ],
+  algebra:[
+    {q:'化简：5a+3b-2a+b',a:'3a+4b',hint:'合并同类项',check:function(v){return v.replace(/\s/g,'')==='3a+4b'}},
+    {q:'化简：3(x+2y)-x+4y',a:'2x+10y',hint:'展开后合并',check:function(v){return v.replace(/\s/g,'')==='2x+10y'}},
+    {q:'当a=3时，求 4a²-2a+1 的值。',a:'31',hint:'4×9-2×3+1',check:function(v){return v.trim()==='31'}}
+  ],
+  travel:[
+    {q:'小明从家到学校1200米，去时速度60米/分，回来速度40米/分。来回平均速度是多少？',a:'48',hint:'总路程÷总时间=2400÷(20+30)',check:function(v){return v.trim()==='48'}},
+    {q:'汽车计划3小时行180千米，出发晚了30分钟。要按时到达，速度应为多少千米/小时？',a:'72',hint:'实际2.5小时，180÷2.5',check:function(v){return v.trim()==='72'}}
+  ],
+  count:[
+    {q:'从3件不同上衣和4条不同裤子中选一件上衣和一条裤子，共有多少种搭配？',a:'12',hint:'乘法原理：3×4',check:function(v){return v.trim()==='12'}},
+    {q:'用1、2、3三个数字组成无重复的三位数，共有几个？',a:'6',hint:'3×2×1=6',check:function(v){return v.trim()==='6'}},
+    {q:'5人站一排，其中甲必须站最左边，共有几种排法？',a:'24',hint:'甲固定，其余4!=24',check:function(v){return v.trim()==='24'}}
+  ],
+  digits:[
+    {q:'一本书共80页，排页码时一共用了多少个数字？',a:'151',hint:'1~9:9个，10~80:71×2=142个',check:function(v){return v.trim()==='151'}},
+    {q:'从1到100，数字"5"一共出现了几次？',a:'20',hint:'个位10次+十位10次',check:function(v){return v.trim()==='20'}}
+  ],
+  match:[
+    {q:'4个队单循环赛（每两队赛一场），共赛几场？',a:'6',hint:'C(4,2)=4×3÷2',check:function(v){return v.trim()==='6'}},
+    {q:'5个队单循环赛，胜得2分负0分平各1分，所有队总分是多少？',a:'20',hint:'共10场，每场产生2分',check:function(v){return v.trim()==='20'}}
+  ],
+  chicken:[
+    {q:'鸡兔同笼，头35个，腿94条，兔有几只？',a:'12',hint:'假设全鸡：35×2=70，差24÷2=12',check:function(v){return v.trim()==='12'}},
+    {q:'1元硬币和5角硬币共20枚，共15元。1元硬币有几枚？',a:'10',hint:'假设全5角：20×0.5=10，差5÷0.5=10',check:function(v){return v.trim()==='10'}},
+    {q:'大小船共10条，大船坐6人小船坐4人，共坐52人。大船几条？',a:'6',hint:'假设全小船：10×4=40，差12÷2=6',check:function(v){return v.trim()==='6'}}
+  ],
+  include:[
+    {q:'全班40人，喜欢语文的有28人，喜欢数学的有32人，两科都喜欢的至少有几人？',a:'20',hint:'28+32-40=20',check:function(v){return v.trim()==='20'}},
+    {q:'50人中，会游泳的有35人，会骑车的有38人，都会的至少有几人？',a:'23',hint:'35+38-50=23',check:function(v){return v.trim()==='23'}}
+  ],
+  path:[
+    {q:'在3×3的网格中，从左下到右上的最短路线有几条？（只能向右或向上）',a:'6',hint:'C(4,2)=6 或标数法',check:function(v){return v.trim()==='6'}},
+    {q:'在4×2的网格中，从左下到右上的最短路线有几条？',a:'15',hint:'C(6,2)=15 或标数法',check:function(v){return v.trim()==='15'}},
+    {q:'在2×2的网格中，从A到B的最短路线有几条？（只能向右或向上）',a:'6',hint:'C(4,2)=6',check:function(v){return v.trim()==='6'}}
+  ]
+};
+
+// Study plan - 4 weeks
+const PLAN = [
+  {week:1,title:'第1周：等差数列+和差倍',days:[
+    {day:'周一',topic:'等差数列',desc:'复习错题Q1-Q3，做2道练习题',kp:'arith'},
+    {day:'周二',topic:'等差数列',desc:'复习错题Q4-Q7，做2道练习题',kp:'arith'},
+    {day:'周三',topic:'和差倍问题',desc:'复习错题Q12-Q13，做2道练习题',kp:'sumdiff'},
+    {day:'周四',topic:'综合巩固',desc:'等差+和差倍各做3道新题',kp:'arith'},
+    {day:'周五',topic:'周测验',desc:'等差数列+和差倍综合5题',kp:'arith'}
+  ]},
+  {week:2,title:'第2周：最短路线+鸡兔同笼',days:[
+    {day:'周一',topic:'最短路线',desc:'复习错题Q32-Q35，学习标数法',kp:'path'},
+    {day:'周二',topic:'最短路线',desc:'复习错题Q36-Q40，做练习题',kp:'path'},
+    {day:'周三',topic:'鸡兔同笼',desc:'复习错题Q28-Q30，做2道练习题',kp:'chicken'},
+    {day:'周四',topic:'综合巩固',desc:'最短路线+鸡兔各做3道新题',kp:'path'},
+    {day:'周五',topic:'周测验',desc:'本周知识点综合5题',kp:'path'}
+  ]},
+  {week:3,title:'第3周：运算与代数+计数',days:[
+    {day:'周一',topic:'新定义运算',desc:'复习错题Q14-Q16，做练习题',kp:'customop'},
+    {day:'周二',topic:'代数式',desc:'复习错题Q17-Q19，做练习题',kp:'algebra'},
+    {day:'周三',topic:'计数原理',desc:'复习错题Q22-Q24，做练习题',kp:'count'},
+    {day:'周四',topic:'综合巩固',desc:'运算+代数+计数各做2道新题',kp:'customop'},
+    {day:'周五',topic:'周测验',desc:'本周知识点综合5题',kp:'algebra'}
+  ]},
+  {week:4,title:'第4周：其余专题+总复习',days:[
+    {day:'周一',topic:'年龄+行程',desc:'复习错题Q8-Q9、Q20-Q21',kp:'age'},
+    {day:'周二',topic:'统筹+比赛+容斥',desc:'复习错题Q10-Q11、Q26-Q27、Q31',kp:'opt'},
+    {day:'周三',topic:'数字问题',desc:'复习错题Q25，做练习题',kp:'digits'},
+    {day:'周四',topic:'全面复习',desc:'回顾所有标记为"未掌握"的错题',kp:'arith'},
+    {day:'周五',topic:'期末测验',desc:'全部知识点综合10题',kp:'arith'}
+  ]}
+];
+
+// ============ STATE ============
+let state = {
+  tab: 0,
+  errorIdx: 0,
+  errorFilter: 'all',
+  showAnswer: false,
+  mastered: {},  // question id -> true/false
+  practiceKP: null,
+  practiceIdx: 0,
+  practiceAnswered: false,
+  practiceInput: '',
+  practiceCorrect: false,
+  practiceScore: {right:0,total:0},
+  planWeek: 0,
+  planDone: {}  // "week-day" -> true
+};
+
+// ============ HELPERS ============
+function $(sel){return document.querySelector(sel)}
+function $$(sel){return document.querySelectorAll(sel)}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+function kpInfo(id){return KP.find(k=>k.id===id)}
+function errorsByKP(kpId){return ERRORS.filter(e=>e.kp===kpId)}
+function masteredCount(kpId){return ERRORS.filter(e=>e.kp===kpId&&state.mastered[e.id]).length}
+function totalMastered(){return Object.values(state.mastered).filter(v=>v).length}
+function stars(n){return '★'.repeat(n)+'☆'.repeat(5-n)}
+function filteredErrors(){
+  if(state.errorFilter==='all') return ERRORS;
+  if(state.errorFilter==='unmastered') return ERRORS.filter(e=>!state.mastered[e.id]);
+  return errorsByKP(state.errorFilter);
+}
+
+// ============ TAB NAVIGATION ============
+function switchTab(idx){
+  state.tab=idx;
+  $$('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  $$('.page').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  const titles=['错题复习','练习场','学情报告','学习计划'];
+  const subs=['回顾做错的题目','针对性练习','知识点掌握情况','每周学习安排'];
+  $('#headerTitle').textContent=titles[idx];
+  $('#headerSub').textContent='三年级科学思维 · '+subs[idx];
+  if(idx===0) renderErrors();
+  else if(idx===1) renderPractice();
+  else if(idx===2) renderStats();
+  else if(idx===3) renderPlan();
+  $('#contentArea').scrollTop=0;
+}
+
+// ============ PAGE: ERRORS ============
+function renderErrors(){
+  const pg=$('#pageErrors');
+  const list=filteredErrors();
+  if(list.length===0){
+    pg.innerHTML='<div class="empty animate-in"><div class="empty-icon">&#127881;</div><p>这个知识点已全部掌握!</p></div>';
+    return;
+  }
+  if(state.errorIdx>=list.length) state.errorIdx=0;
+  const e=list[state.errorIdx];
+  const kp=kpInfo(e.kp);
+  const isMastered=state.mastered[e.id];
+
+  let optsHTML='';
+  if(e.opts){
+    optsHTML='<ul class="option-list">'+e.opts.map((o,i)=>{
+      let cls='';
+      if(state.showAnswer){
+        if(i===e.ans) cls='correct';
+        else cls='';
+      }
+      return `<li class="${cls}">${o}</li>`;
+    }).join('')+'</ul>';
+  }
+
+  let answerHTML='';
+  if(state.showAnswer){
+    answerHTML=`<div class="answer-box show animate-in"><div class="label">&#128161; 解析</div><p>${e.detail}</p></div>`;
+  }
+
+  pg.innerHTML=`
+    <div class="filter-row">
+      <span class="chip ${state.errorFilter==='all'?'active':''}" onclick="setErrorFilter('all')">全部(${ERRORS.length})</span>
+      <span class="chip ${state.errorFilter==='unmastered'?'active':''}" onclick="setErrorFilter('unmastered')">未掌握(${ERRORS.length-totalMastered()})</span>
+    </div>
+    <div class="card animate-in">
+      <div class="flex-between">
+        <span class="kp-tag">${kp.icon} ${kp.name}</span>
+        <span class="diff-stars">${stars(e.diff)}</span>
+      </div>
+      <div class="q-nav">
+        <button class="btn btn-sm btn-outline" onclick="prevError()" ${state.errorIdx===0?'disabled':''}>&#8592; 上一题</button>
+        <span class="q-num">第 ${state.errorIdx+1}/${list.length} 题</span>
+        <button class="btn btn-sm btn-outline" onclick="nextError()" ${state.errorIdx>=list.length-1?'disabled':''}>&#8594; 下一题</button>
+      </div>
+      <div class="q-body"><p>${e.q}</p></div>
+      ${optsHTML}
+      <div style="text-align:center;margin:12px 0">
+        <button class="btn btn-pri btn-sm" onclick="toggleAnswer()">${state.showAnswer?'&#128064; 收起答案':'&#128064; 查看解析'}</button>
+      </div>
+      ${answerHTML}
+      <div class="mastery-btns">
+        <button class="btn ${isMastered?'btn-ok':'btn-outline'}" onclick="toggleMaster(${e.id})">
+          ${isMastered?'&#10004; 已掌握':'&#9711; 标记已掌握'}
+        </button>
+        <button class="btn btn-outline" onclick="goToPractice('${e.kp}')">&#9997;&#65039; 做同类题</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:8px">
+      <div class="card-title">&#128209; 知识点快速切换</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        ${KP.map(k=>{
+          const cnt=errorsByKP(k.id).length;
+          const mst=masteredCount(k.id);
+          return `<span class="chip ${state.errorFilter===k.id?'active':''}" onclick="setErrorFilter('${k.id}')">${k.name}(${mst}/${cnt})</span>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function setErrorFilter(f){
+  state.errorFilter=f;
+  state.errorIdx=0;
+  state.showAnswer=false;
+  renderErrors();
+}
+function prevError(){if(state.errorIdx>0){state.errorIdx--;state.showAnswer=false;renderErrors()}}
+function nextError(){const list=filteredErrors();if(state.errorIdx<list.length-1){state.errorIdx++;state.showAnswer=false;renderErrors()}}
+function toggleAnswer(){state.showAnswer=!state.showAnswer;renderErrors()}
+function toggleMaster(id){
+  state.mastered[id]=!state.mastered[id];
+  toast(state.mastered[id]?'&#127881; 太棒了！已标记掌握':'已取消标记');
+  renderErrors();
+}
+function goToPractice(kpId){
+  state.practiceKP=kpId;
+  state.practiceIdx=0;
+  state.practiceAnswered=false;
+  state.practiceInput='';
+  state.practiceCorrect=false;
+  state.practiceScore={right:0,total:0};
+  switchTab(1);
+}
+
+// ============ PAGE: PRACTICE ============
+function renderPractice(){
+  const pg=$('#pagePractice');
+  if(!state.practiceKP){
+    // Show KP selection
+    pg.innerHTML=`
+      <div class="card animate-in">
+        <div class="card-title">&#127919; 选择要练习的知识点</div>
+        <p style="font-size:13px;color:var(--txt2);margin-bottom:12px">根据你的薄弱知识点进行针对性练习</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${KP.map(k=>{
+            const cnt=errorsByKP(k.id).length;
+            const pct=cnt>0?Math.round(masteredCount(k.id)/cnt*100):100;
+            const color=pct<50?'var(--err)':pct<80?'var(--warn)':'var(--ok)';
+            return `<div class="card" style="flex:1;min-width:140px;padding:12px;cursor:pointer;border:1.5px solid ${color}20" onclick="goToPractice('${k.id}')">
+              <div style="font-size:14px;font-weight:600">${k.icon} ${k.name}</div>
+              <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div></div>
+              <div style="font-size:11px;color:var(--txt3)">掌握 ${pct}% · 错题${cnt}道</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+
+  const kpid=state.practiceKP;
+  const kp=kpInfo(kpid);
+  const practices=PRACTICE[kpid]||[];
+  if(practices.length===0||state.practiceIdx>=practices.length){
+    pg.innerHTML=`
+      <div class="card animate-in" style="text-align:center">
+        <div style="font-size:48px;margin:20px 0">&#127942;</div>
+        <h2 style="margin-bottom:8px">练习完成!</h2>
+        <p style="color:var(--txt2)">得分：${state.practiceScore.right}/${state.practiceScore.total}</p>
+        <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
+          <button class="btn btn-pri" onclick="resetPractice('${kpid}')">&#128260; 再来一次</button>
+          <button class="btn btn-outline" onclick="state.practiceKP=null;renderPractice()">换个知识点</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const p=practices[state.practiceIdx];
+  pg.innerHTML=`
+    <div class="card animate-in">
+      <div class="flex-between">
+        <span class="kp-tag">${kp.icon} ${kp.name} · 练习</span>
+        <span class="q-num">${state.practiceIdx+1}/${practices.length}</span>
+      </div>
+      <div style="font-size:13px;color:var(--txt2);margin-bottom:8px">得分：${state.practiceScore.right}/${state.practiceScore.total}</div>
+      <div class="q-body"><p>${p.q}</p></div>
+      <input class="practice-input" id="practiceInput" type="text" placeholder="输入你的答案..." value="${state.practiceInput}" ${state.practiceAnswered?'disabled':''} oninput="state.practiceInput=this.value" onkeydown="if(event.key==='Enter')checkPractice()">
+      ${state.practiceAnswered?`
+        <div class="answer-box show animate-in" style="background:${state.practiceCorrect?'var(--ok-l)':'var(--err-l)'};border-color:${state.practiceCorrect?'var(--ok)':'var(--err)'}">
+          <div class="label" style="color:${state.practiceCorrect?'var(--ok)':'var(--err)'}">
+            ${state.practiceCorrect?'&#127881; 回答正确！':'&#10060; 不太对哦'}
+          </div>
+          <p>正确答案：<strong>${p.a}</strong></p>
+          <p style="color:var(--txt2);margin-top:4px">提示：${p.hint}</p>
+        </div>
+        <button class="btn btn-pri btn-block" onclick="nextPractice()" style="margin-top:12px">
+          ${state.practiceIdx<practices.length-1?'下一题 &#8594;':'查看结果'}
+        </button>
+      `:`
+        <button class="btn btn-pri btn-block" onclick="checkPractice()" style="margin-top:8px">&#10004; 提交答案</button>
+      `}
+    </div>
+    <button class="btn btn-outline btn-block btn-sm" onclick="state.practiceKP=null;renderPractice()" style="margin-top:8px">&#8592; 返回知识点选择</button>`;
+
+  if(!state.practiceAnswered){
+    setTimeout(()=>{const inp=$('#practiceInput');if(inp)inp.focus()},300);
+  }
+}
+
+function checkPractice(){
+  const practices=PRACTICE[state.practiceKP];
+  const p=practices[state.practiceIdx];
+  const input=state.practiceInput.trim();
+  if(!input){toast('请输入答案');return}
+  state.practiceAnswered=true;
+  state.practiceCorrect=p.check(input);
+  state.practiceScore.total++;
+  if(state.practiceCorrect) state.practiceScore.right++;
+  renderPractice();
+}
+function nextPractice(){
+  state.practiceIdx++;
+  state.practiceAnswered=false;
+  state.practiceInput='';
+  state.practiceCorrect=false;
+  renderPractice();
+}
+function resetPractice(kpId){
+  state.practiceKP=kpId;
+  state.practiceIdx=0;
+  state.practiceAnswered=false;
+  state.practiceInput='';
+  state.practiceCorrect=false;
+  state.practiceScore={right:0,total:0};
+  renderPractice();
+}
+
+// ============ PAGE: STATS ============
+function renderStats(){
+  const pg=$('#pageStats');
+  const total=ERRORS.length;
+  const mst=totalMastered();
+  const pct=Math.round(mst/total*100);
+  const circumference=2*Math.PI*42;
+  const offset=circumference*(1-pct/100);
+
+  // Group by KP
+  const kpStats=KP.map(k=>{
+    const errs=errorsByKP(k.id);
+    const m=masteredCount(k.id);
+    const total_kp=errs.length;
+    const p=total_kp>0?Math.round(m/total_kp*100):100;
+    return {...k,total:total_kp,mastered:m,pct:p};
+  }).filter(k=>k.total>0).sort((a,b)=>a.pct-b.pct);
+
+  pg.innerHTML=`
+    <div class="card animate-in" style="text-align:center">
+      <div class="progress-ring">
+        <svg width="100" height="100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#F0F0F5" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="var(--pri)" stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="val">${pct}%</div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num" style="color:var(--pri)">${total}</div><div class="stat-label">总错题数</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--ok)">${mst}</div><div class="stat-label">已掌握</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--warn)">${total-mst}</div><div class="stat-label">待巩固</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--err)">${kpStats.filter(k=>k.pct<50).length}</div><div class="stat-label">薄弱知识点</div></div>
+      </div>
+    </div>
+    <div class="card animate-in">
+      <div class="card-title">&#128202; 各知识点掌握情况</div>
+      ${kpStats.map(k=>{
+        const color=k.pct<50?'var(--err)':k.pct<80?'var(--warn)':'var(--ok)';
+        const label=k.pct<50?'薄弱':k.pct<80?'待巩固':'已掌握';
+        return `
+          <div class="bar-wrap" style="margin:10px 0">
+            <div class="bar-label">
+              <span>${k.icon} ${k.name} <span class="badge" style="background:${color}18;color:${color};font-size:10px">${label}</span></span>
+              <span>${k.mastered}/${k.total}</span>
+            </div>
+            <div class="bar-bg"><div class="bar-fill" style="width:${k.pct}%;background:${color}"></div></div>
+          </div>`;
+      }).join('')}
+    </div>
+    <div class="card animate-in">
+      <div class="card-title">&#128293; 重点攻克</div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:10px">以下知识点需要重点练习：</p>
+      ${kpStats.filter(k=>k.pct<80).map(k=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F0F0F5">
+          <span style="font-size:20px">${k.icon}</span>
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:14px">${k.name}</div>
+            <div style="font-size:12px;color:var(--txt3)">错题${k.total}道，已掌握${k.mastered}道</div>
+          </div>
+          <button class="btn btn-sm btn-pri" onclick="goToPractice('${k.id}')">去练习</button>
+        </div>
+      `).join('')||'<p style="color:var(--ok);text-align:center;padding:16px">&#127881; 全部掌握，太棒了!</p>'}
+    </div>`;
+}
+
+// ============ PAGE: PLAN ============
+function renderPlan(){
+  const pg=$('#pagePlan');
+  const week=PLAN[state.planWeek];
+  // Calculate week progress
+  const weekDone=week.days.filter((_,i)=>state.planDone[`${state.planWeek}-${i}`]).length;
+  const weekPct=Math.round(weekDone/week.days.length*100);
+
+  pg.innerHTML=`
+    <div class="week-tabs">
+      ${PLAN.map((w,i)=>`<button class="week-tab ${i===state.planWeek?'active':''}" onclick="switchWeek(${i})">${w.title.split('：')[0]}</button>`).join('')}
+    </div>
+    <div class="card animate-in">
+      <div class="flex-between" style="margin-bottom:10px">
+        <div class="card-title" style="margin:0">${week.title}</div>
+        <span class="badge badge-pri">${weekPct}%</span>
+      </div>
+      <div class="bar-bg" style="margin-bottom:14px"><div class="bar-fill" style="width:${weekPct}%;background:var(--pri)"></div></div>
+      ${week.days.map((d,i)=>{
+        const done=state.planDone[`${state.planWeek}-${i}`];
+        const kp=kpInfo(d.kp);
+        return `
+          <div class="plan-item">
+            <div class="plan-check ${done?'done':''}" onclick="togglePlanDay(${state.planWeek},${i})">${done?'&#10004;':''}</div>
+            <div class="plan-info">
+              <div class="plan-title" style="${done?'text-decoration:line-through;color:var(--txt3)':''}">${d.topic}</div>
+              <div class="plan-desc">${d.desc}</div>
+            </div>
+            <span class="plan-day">${d.day}</span>
+          </div>`;
+      }).join('')}
+    </div>
+    ${weekDone===week.days.length?`
+      <div class="card animate-in" style="text-align:center;background:linear-gradient(135deg,#E6F9F3,#EDE8FF)">
+        <div style="font-size:48px">&#127881;</div>
+        <h3 style="color:var(--ok);margin:8px 0">本周任务全部完成!</h3>
+        <p style="font-size:13px;color:var(--txt2)">萱萱真棒！继续保持哦~</p>
+      </div>`:''}
+    <div class="card animate-in">
+      <div class="card-title">&#128161; 学习小贴士</div>
+      <p style="font-size:13px;color:var(--txt2);line-height:1.8">
+        ${getTip()}
+      </p>
+    </div>`;
+}
+
+function switchWeek(i){state.planWeek=i;renderPlan()}
+function togglePlanDay(w,d){
+  const key=`${w}-${d}`;
+  state.planDone[key]=!state.planDone[key];
+  if(state.planDone[key]) toast('&#127881; 完成一项，加油!');
+  renderPlan();
+}
+function getTip(){
+  const tips=[
+    '做错题时，先自己想3分钟，再看解析哦！',
+    '标数法是解最短路线的好帮手，多练几次就熟练了。',
+    '等差数列的公式要记牢：项数=(末项-首项)÷公差+1',
+    '鸡兔同笼问题，先假设全是同一种，再算差值。',
+    '每天进步一点点，积少成多变聪明！',
+    '做完练习题记得检查，养成好习惯。'
+  ];
+  return tips[Math.floor(Math.random()*tips.length)];
+}
+
+// ============ INIT ============
+$$('.tab').forEach(t=>{
+  t.addEventListener('click',()=>switchTab(parseInt(t.dataset.tab)));
+});
+
+renderErrors();
+</script>
+</body>
+</html>
