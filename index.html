@@ -56,6 +56,8 @@ html,body{height:100%;font-family:-apple-system,"PingFang SC","Helvetica Neue",s
 .option-list{list-style:none;padding:0}
 .option-list li{padding:10px 14px;margin:6px 0;border-radius:10px;border:1.5px solid #E8E8EE;font-size:14px;cursor:pointer;transition:.2s}
 .option-list li:active{background:#F5F5FA}
+.option-list li[onclick]{cursor:pointer}
+.option-list li[onclick]:hover{border-color:#C8C0F8;background:#FAFAFF}
 .option-list li.selected{border-color:var(--pri);background:var(--pri-l)}
 .option-list li.correct{border-color:var(--ok);background:var(--ok-l)}
 .option-list li.wrong{border-color:var(--err);background:var(--err-l)}
@@ -423,6 +425,8 @@ let state = {
   errorIdx: 0,
   errorFilter: 'all',
   showAnswer: false,
+  attempted: false,       // whether user has tried current question
+  selectedOption: null,    // which option index was selected (for MC)
   mastered: {},  // question id -> true/false
   practiceKP: null,
   practiceIdx: 0,
@@ -477,22 +481,55 @@ function renderErrors(){
   const e=list[state.errorIdx];
   const kp=kpInfo(e.kp);
   const isMastered=state.mastered[e.id];
+  const hasOpts=!!e.opts;
+  const attempted=state.attempted;
+  const isCorrect=hasOpts&&attempted&&state.selectedOption===e.ans;
 
+  // Options HTML: clickable before attempt, locked after
   let optsHTML='';
-  if(e.opts){
+  if(hasOpts){
     optsHTML='<ul class="option-list">'+e.opts.map((o,i)=>{
       let cls='';
-      if(state.showAnswer){
+      if(attempted){
         if(i===e.ans) cls='correct';
-        else cls='';
+        else if(i===state.selectedOption) cls='wrong';
       }
-      return `<li class="${cls}">${o}</li>`;
+      const click=attempted?'':`onclick="selectOption(${i})"`;
+      return `<li class="${cls}" ${click}>${o}</li>`;
     }).join('')+'</ul>';
   }
 
-  let answerHTML='';
-  if(state.showAnswer){
-    answerHTML=`<div class="answer-box show animate-in"><div class="label">&#128161; 解析</div><p>${e.detail}</p></div>`;
+  // Feedback after MC attempt
+  let feedbackHTML='';
+  if(hasOpts&&attempted){
+    if(isCorrect){
+      feedbackHTML=`<div class="answer-box show animate-in" style="background:var(--ok-l);border-color:var(--ok)">
+        <div class="label" style="color:var(--ok)">&#127881; 回答正确！太棒了！</div>
+        <p style="margin-top:6px">${e.detail}</p></div>`;
+    }else{
+      feedbackHTML=`<div class="answer-box show animate-in" style="background:var(--err-l);border-color:var(--err)">
+        <div class="label" style="color:var(--err)">&#10060; 答错了，看看解析吧</div>
+        <p style="margin-top:6px">${e.detail}</p></div>`;
+    }
+  }
+
+  // Non-MC: show answer only after "我做完了"
+  let nonMcHTML='';
+  if(!hasOpts){
+    if(attempted){
+      nonMcHTML=`<div class="answer-box show animate-in"><div class="label">&#128161; 解析</div><p>${e.detail}</p></div>`;
+    }else{
+      nonMcHTML=`<div style="text-align:center;margin:16px 0">
+        <button class="btn btn-pri" onclick="markAttempted()">&#9997;&#65039; 我做完了，看解析</button>
+        <p class="hint-text" style="margin-top:8px">先自己想一想，做完再点哦~</p></div>`;
+    }
+  }
+
+  // Collapsible answer toggle (only for MC after attempt, or non-MC after attempt)
+  let toggleHTML='';
+  if(hasOpts&&attempted){
+    toggleHTML=`<div style="text-align:center;margin:8px 0">
+      <button class="btn btn-outline btn-sm" onclick="toggleAnswer()">${state.showAnswer?'&#128064; 收起解析':'&#128064; 再看解析'}</button></div>`;
   }
 
   pg.innerHTML=`
@@ -512,10 +549,11 @@ function renderErrors(){
       </div>
       <div class="q-body"><p>${e.q}</p></div>
       ${optsHTML}
-      <div style="text-align:center;margin:12px 0">
-        <button class="btn btn-pri btn-sm" onclick="toggleAnswer()">${state.showAnswer?'&#128064; 收起答案':'&#128064; 查看解析'}</button>
-      </div>
-      ${answerHTML}
+      ${!hasOpts?nonMcHTML:''}
+      ${hasOpts&&!attempted?'<p class="hint-text" style="text-align:center;margin-top:8px">&#9757;&#65039; 点选你认为正确的答案</p>':''}
+      ${hasOpts&&attempted&&!state.showAnswer?'':feedbackHTML}
+      ${hasOpts&&attempted&&state.showAnswer?`<div class="answer-box show animate-in"><div class="label">&#128161; 解析</div><p>${e.detail}</p></div>`:''}
+      ${toggleHTML}
       <div class="mastery-btns">
         <button class="btn ${isMastered?'btn-ok':'btn-outline'}" onclick="toggleMaster(${e.id})">
           ${isMastered?'&#10004; 已掌握':'&#9711; 标记已掌握'}
@@ -539,11 +577,26 @@ function setErrorFilter(f){
   state.errorFilter=f;
   state.errorIdx=0;
   state.showAnswer=false;
+  state.attempted=false;
+  state.selectedOption=null;
   renderErrors();
 }
-function prevError(){if(state.errorIdx>0){state.errorIdx--;state.showAnswer=false;renderErrors()}}
-function nextError(){const list=filteredErrors();if(state.errorIdx<list.length-1){state.errorIdx++;state.showAnswer=false;renderErrors()}}
+function prevError(){if(state.errorIdx>0){state.errorIdx--;state.showAnswer=false;state.attempted=false;state.selectedOption=null;renderErrors()}}
+function nextError(){const list=filteredErrors();if(state.errorIdx<list.length-1){state.errorIdx++;state.showAnswer=false;state.attempted=false;state.selectedOption=null;renderErrors()}}
 function toggleAnswer(){state.showAnswer=!state.showAnswer;renderErrors()}
+function selectOption(idx){
+  state.selectedOption=idx;
+  state.attempted=true;
+  const list=filteredErrors();
+  const e=list[state.errorIdx];
+  if(idx===e.ans) toast('&#127881; 答对了，真棒！');
+  else toast('&#10060; 答错了，看看解析吧');
+  renderErrors();
+}
+function markAttempted(){
+  state.attempted=true;
+  renderErrors();
+}
 function toggleMaster(id){
   state.mastered[id]=!state.mastered[id];
   toast(state.mastered[id]?'&#127881; 太棒了！已标记掌握':'已取消标记');
